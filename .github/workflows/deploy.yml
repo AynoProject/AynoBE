@@ -60,7 +60,7 @@ jobs:
           key: ${{ secrets.BASTION_PRIVATE_KEY }}
           script_stop: true
           script: |
-            ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ubuntu@${{ secrets.PRIVATE_EC2_INTERNAL_IP }} << 'EOF'
+            ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ubuntu@${{ secrets.PRIVATE_EC2_INTERNAL_IP }} << EOF
               docker stop ayno|| true
               docker rm ayno || true
               docker pull ${{ steps.login-ecr.outputs.registry }}/ayno:latest
