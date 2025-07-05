@@ -17,6 +17,10 @@ bin/
 !**/src/main/**/bin/
 !**/src/test/**/bin/
 
+### GIT ACTION ###
+application-dev.yml
+application-prod.yml
+
 ### IntelliJ IDEA ###
 .idea
 *.iws
