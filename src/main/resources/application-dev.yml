@@ -18,3 +18,6 @@ spring:
 
   config:
     import: classpath:application-swagger.yml
+
+jwt:
+  secret: "Tm1yfUw5S1MvW2BAX2ZmYmMrV08mTzE4eEZqfWRSKlt2VVA3Wy5hUy1iZF9SWXJ3MTUpcSs0XzoqIV5edWw+"
