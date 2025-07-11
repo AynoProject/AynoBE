@@ -84,7 +84,7 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    //cors설정
+    // cors설정
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
