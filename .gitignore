@@ -21,6 +21,9 @@ bin/
 application-dev.yml
 application-prod.yml
 
+### 암호와 비번 생성기 ###
+BcryptGenerator.java
+
 ### IntelliJ IDEA ###
 .idea
 *.iws
