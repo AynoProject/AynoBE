@@ -35,11 +35,11 @@ public class AuthController {
 
         // 아이디/비번 검증
         authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getUserId(), request.getPassword())
+                new UsernamePasswordAuthenticationToken(request.getId(), request.getPassword())
         );
 
         // 유저 정보 조회
-        UserDetails userDetails = userDetailsService.loadUserByUsername(request.getUserId());
+        UserDetails userDetails = userDetailsService.loadUserByUsername(request.getId());
 
         // JWT 토큰 생성
         String accessToken = jwtService.generateAccessToken(userDetails);
