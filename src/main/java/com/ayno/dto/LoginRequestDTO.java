@@ -9,7 +9,7 @@ import lombok.Setter;
 @Schema(description = "로그인 요청 DTO")
 public class LoginRequestDTO {
     @Schema(description = "아이디", example = "testuser")
-    private String Id;
+    private String id;
     @Schema(description = "비밀번호", example = "testpass")
     private String password;
 }
