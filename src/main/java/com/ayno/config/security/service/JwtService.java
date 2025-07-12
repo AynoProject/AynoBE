@@ -1,5 +1,6 @@
 package com.ayno.config.security.service;
 
+import com.ayno.config.security.CustomUserDetails;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -11,6 +12,8 @@ import org.springframework.stereotype.Service;
 
 import java.security.Key;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 public class JwtService {
@@ -21,23 +24,32 @@ public class JwtService {
     private final long REFRESH_TOKEN_EXPIRATION = 1000 * 60 * 60 * 24 * 7; // 7일
 
     // 토큰 생성
-    private String generateToken(String userId, long expiration) {
+    private String generateToken(UserDetails user, long expiration) {
         return Jwts.builder()
-                .setSubject(userId) // 식별자
+                .setClaims(createExtraClaims(user))
+                .setSubject(user.getUsername()) // 식별자
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(getSignKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 
+    private Map<String, Object> createExtraClaims(UserDetails user) {
+        CustomUserDetails customUser = (CustomUserDetails) user;
+
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("role", "ROLE_" + customUser.getRole().name()); // OK
+        return claims;
+    }
+
     // Access 토큰 생성
-    public String generateAccessToken(UserDetails userDetails) {
-        return generateToken(userDetails.getUsername(), ACCESS_TOKEN_EXPIRATION);
+    public String generateAccessToken(UserDetails user) {
+        return generateToken(user, ACCESS_TOKEN_EXPIRATION);
     }
 
     // Refresh 토큰 생성
-    public String generateRefreshToken(UserDetails userDetails) {
-        return generateToken(userDetails.getUsername(), REFRESH_TOKEN_EXPIRATION);
+    public String generateRefreshToken(UserDetails user) {
+        return generateToken(user, REFRESH_TOKEN_EXPIRATION);
     }
 
 
