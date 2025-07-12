@@ -31,6 +31,10 @@ public class CustomUserDetails implements UserDetails {
         return Id;
     }
 
+    public RoleType getRole() {
+        return this.role;
+    }
+
     @Override
     public boolean isAccountNonExpired() {
         return true;  // 계정 만료 여부 (필요 시 DB 필드 추가해서 관리)

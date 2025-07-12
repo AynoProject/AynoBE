@@ -4,11 +4,13 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.http.ResponseCookie;
 
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 public class LoginResponseDTO {
-    private String message;
+    private transient ResponseCookie accessCookie;  // Set-Cookie용
+    private transient ResponseCookie refreshCookie; // Set-Cookie용
 }
