@@ -28,6 +28,4 @@ public interface RankRepository extends JpaRepository<Rank, Long> {
             ")")
     List<Rank> findLatestPerTool();
 
-    Optional<Rank> findTopByTool_ToolNameOrderByCreatedAtDesc(String toolName);
-
 }

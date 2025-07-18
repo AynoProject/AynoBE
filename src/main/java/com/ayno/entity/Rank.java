@@ -43,7 +43,7 @@ public class Rank extends BaseTimeEntity{
     private Long boundRateScore;
 
     @Column(nullable = false)
-    private boolean isLatest;
+    private Boolean isLatest;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "toolName", nullable = false)
