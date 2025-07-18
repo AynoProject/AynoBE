@@ -7,6 +7,9 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(name = "admin")
 @Getter
@@ -24,4 +27,7 @@ public class Admin extends BaseTimeEntity{
     @Column
     @Enumerated(EnumType.STRING)
     private RoleType role;
+
+    @OneToMany(mappedBy = "admin")
+    private List<Log> logs = new ArrayList<>();
 }
