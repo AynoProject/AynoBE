@@ -2,17 +2,15 @@ package com.ayno.controller;
 
 import com.ayno.config.security.CustomUserDetails;
 import com.ayno.dto.common.Response;
-import com.ayno.dto.rank.DeleteCsvResponseDTO;
-import com.ayno.dto.rank.GetCsvHistoryResponseDTO;
-import com.ayno.dto.rank.RankUploadResponseDTO;
+import com.ayno.dto.rank.*;
 import com.ayno.service.RankService;
+import com.ayno.service.S3Service;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -22,6 +20,7 @@ import java.util.List;
 public class RankController {
 
     private final RankService rankService;
+    private final S3Service s3Service;
 
     @Operation(
             summary = "랭킹 CSV 파일 히스토리 가져오기",
@@ -33,15 +32,25 @@ public class RankController {
     }
 
     @Operation(
-            summary = "랭킹 CSV 파일 업로드",
-            description = "관리자가 랭킹 CSV 파일을 업로드합니다."
+            summary = "랭킹 CSV 파일 업로드 용 Presigned URL 발급",
+            description = "관리자가 S3에 랭킹 CSV 파일을 업로드할 수 있도록 서명된 URL을 발급합니다."
+    )
+    @PostMapping("/rank/upload-url")
+    public ResponseEntity<Response<String>> generateRankUploadUrl(@RequestBody S3UploadRankRequestDTO request) {
+        String url = s3Service.generatePresignedUrl(request.getFileName(), request.getContentType());
+        return ResponseEntity.ok(Response.success(url));
+    }
+
+    @Operation(
+            summary = "S3에 업로드된 랭킹 CSV 파일 db등록",
+            description = "관리자가 업로드된 S3 CSV 파일 경로를 전달하여 랭킹을 db에 등록합니다."
     )
     @PostMapping(value = "/rank", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Response<RankUploadResponseDTO>> uploadRankCsv(
-            @RequestPart("file") MultipartFile file,
+            @ModelAttribute S3DownloadRankRequestDTO request,
             @AuthenticationPrincipal CustomUserDetails userDetails)
     {
-        return ResponseEntity.ok(Response.success(rankService.uploadCsv(file, userDetails)));
+        return ResponseEntity.ok(Response.success(rankService.uploadCsvFromS3(request.getS3Url(), userDetails)));
     }
 
     @Operation(

@@ -23,3 +23,13 @@ spring:
 
 jwt:
   secret: "Tm1yfUw5S1MvW2BAX2ZmYmMrV08mTzE4eEZqfWRSKlt2VVA3Wy5hUy1iZF9SWXJ3MTUpcSs0XzoqIV5edWw+"
+
+cloud:
+  aws:
+    s3:
+      bucket: ayno-rank-csv
+    region:
+      static: ap-northeast-2
+    credentials:
+      access-key: "AKIAYOYYYCEGYSMOTEVB"
+      secret-key: "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"

@@ -16,7 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-public class AuthServcie {
+public class AuthService {
     private final AdminRepository adminRepository;
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;

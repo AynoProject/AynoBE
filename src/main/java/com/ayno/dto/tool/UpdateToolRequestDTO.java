@@ -12,7 +12,7 @@ import lombok.Setter;
 public class UpdateToolRequestDTO {
     @Schema(description = "툴 이름", example = "ChatGPT")
     private String toolName;
-    @Schema(description = "로고Url", example = "수정된 주소")
+    @Schema(description = "로고Url", example = "https://ayno-rank-csv.s3.ap-northeast-2.amazonaws.com/uploads/tool-logos/ChatGPT.csv")
     private String logoUrl;
     @Schema(description = "카테고리", example = "DOCUMENT_EDITING")
     private Category category;

@@ -43,6 +43,9 @@ dependencies {
     runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.11.5") // JSON 처리용 (Jackson 기반)
 
     implementation("org.apache.commons:commons-csv:1.9.0")
+    // AWS SDK v2 의존성
+    implementation(platform("software.amazon.awssdk:bom:2.25.15"))
+    implementation("software.amazon.awssdk:s3")
 
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0")
 }
