@@ -20,13 +20,23 @@ import lombok.RequiredArgsConstructor;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.core.ResponseInputStream;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -40,59 +50,66 @@ public class RankService {
     private final RankRepository rankRepository;
     private final LogRepository logRepository;
     private final AdminRepository adminRepository;
+    private final S3Client s3Client;
+
+    @Value("${cloud.aws.s3.bucket}")
+    private String bucket;
 
     @Transactional
-    public RankUploadResponseDTO uploadCsv(MultipartFile file, CustomUserDetails userDetails) {
-        List<RankUploadRequestDTO> aiToolList = parseCsv(file);
+    public RankUploadResponseDTO uploadCsvFromS3(String s3Url, CustomUserDetails userDetails) {
+        String key = extractKeyFromS3Url(s3Url);
 
-        for (RankUploadRequestDTO dto : aiToolList) {
-            // 1. 툴 조회 or 자동 생성
-            Tool tool = toolRepository.findByToolName(dto.getToolName())
-                    .orElseGet(() -> {
-                        Tool newTool = Tool.builder()
-                                .toolName(dto.getToolName())
-                                .category(Category.NONE)
-                                .build();
-                        return toolRepository.save(newTool);
-                    });
+        GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+                .bucket(bucket)
+                .key(key)
+                .build();
 
-            // 2. 기존 최신 Rank false 처리 (toolName 기준)
-            rankRepository.updateIsLatestFalse(tool.getToolName());
+        try (ResponseInputStream<GetObjectResponse> s3InputStream = s3Client.getObject(getObjectRequest)) {
+            List<RankUploadRequestDTO> dtoList = parseCsv(s3InputStream);
 
-            // 3. 새 랭킹 등록 (isLatest = true, createdAt은 자동)
-            Rank rank = Rank.builder()
-                    .tool(tool)
-                    .rank(dto.getRank())
-                    .score(dto.getScore())
-                    .mauScore(dto.getMauScore())
-                    .monthMauChangeRateScore(dto.getMonthMauChangeRateScore())
-                    .avgStayTimeScore(dto.getAvgStayTimeScore())
-                    .avgPagesPerVisitScore(dto.getAvgPagesPerVisitScore())
-                    .boundRateScore(dto.getBoundRateScore())
-                    .isLatest(true)
-                    .build();
+            for (RankUploadRequestDTO dto : dtoList) {
+                Tool tool = toolRepository.findByToolName(dto.getToolName())
+                        .orElseGet(() -> toolRepository.save(
+                                Tool.builder()
+                                        .toolName(dto.getToolName())
+                                        .category(Category.NONE)
+                                        .build()
+                        ));
 
-            rankRepository.save(rank);
+                rankRepository.updateIsLatestFalse(tool.getToolName());
+
+                Rank rank = Rank.builder()
+                        .tool(tool)
+                        .rank(dto.getRank())
+                        .score(dto.getScore())
+                        .mauScore(dto.getMauScore())
+                        .monthMauChangeRateScore(dto.getMonthMauChangeRateScore())
+                        .avgStayTimeScore(dto.getAvgStayTimeScore())
+                        .avgPagesPerVisitScore(dto.getAvgPagesPerVisitScore())
+                        .boundRateScore(dto.getBoundRateScore())
+                        .isLatest(true)
+                        .build();
+
+                rankRepository.save(rank);
+            }
+
+            String fileLabel = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy.M'M' dd일 HH:mm:ss")) + " AI Ranking.CSV";
+            saveRankLog(userDetails, fileLabel, ActionType.UPLOAD);
+
+            return new RankUploadResponseDTO("랭킹 등록 완료");
+
+        } catch (IOException e) {
+            throw new CustomException("S3_READ_ERROR", "S3에서 CSV 읽기 실패: " + e.getMessage());
         }
-
-        // 로그 기록 추가
-        String fileLabel = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy.M'M' dd일 HH:mm:ss")) + " AI Ranking.CSV";
-        saveRankLog(userDetails, fileLabel, ActionType.UPLOAD);
-
-
-        return new RankUploadResponseDTO("랭킹 등록 완료");
     }
 
     /**
      * CSV 파싱 메소드
      */
-    private List<RankUploadRequestDTO> parseCsv(MultipartFile file) {
+    private List<RankUploadRequestDTO> parseCsv(InputStream inputStream) {
         List<RankUploadRequestDTO> list = new ArrayList<>();
-
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(file.getInputStream()));
-             CSVParser parser = CSVFormat.DEFAULT
-                     .withFirstRecordAsHeader()
-                     .parse(reader)) {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+             CSVParser parser = CSVFormat.DEFAULT.withFirstRecordAsHeader().parse(reader)) {
 
             for (CSVRecord record : parser) {
                 try {
@@ -112,7 +129,7 @@ public class RankService {
             }
 
         } catch (IOException e) {
-            throw new CustomException("FILE_READ_ERROR", "CSV 파일 읽기 실패: " + e.getMessage());
+            throw new CustomException("CSV_READ_ERROR", "CSV 파일 읽기 실패: " + e.getMessage());
         }
 
         return list;
@@ -146,6 +163,15 @@ public class RankService {
 
     public List<GetCsvHistoryResponseDTO> getRankHistory(){
         return logRepository.findActiveRankUploadsAsDTO();
+    }
+
+    private String extractKeyFromS3Url(String url) {
+        try {
+            URL s3url = new URL(url);
+            return s3url.getPath().substring(1); // 맨 앞 '/' 제거
+        } catch (MalformedURLException e) {
+            throw new CustomException("INVALID_URL", "유효하지 않은 S3 URL입니다.");
+        }
     }
 
     private void saveRankLog(CustomUserDetails userDetails, String fileLabel, ActionType actionType) {

@@ -1,10 +1,12 @@
 package com.ayno.controller;
 
 import com.ayno.dto.common.Response;
+import com.ayno.dto.rank.S3UploadAiLogoRequestDTO;
 import com.ayno.dto.tool.ShowToolDetailsResponseDTO;
 import com.ayno.dto.tool.ShowToolResponseDTO;
 import com.ayno.dto.tool.UpdateToolRequestDTO;
 import com.ayno.dto.tool.UpdateToolResponseDTO;
+import com.ayno.service.S3Service;
 import com.ayno.service.ToolService;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +21,7 @@ import java.util.List;
 public class ToolController {
 
     private final ToolService toolService;
+    private final S3Service s3Service;
 
     @Operation(
             summary = "AI 툴 정보 및 랭킹 가져오기",
@@ -38,6 +41,18 @@ public class ToolController {
             @PathVariable String toolName
     ){
         return ResponseEntity.ok(Response.success(toolService.getToolDetailsInfor(toolName)));
+    }
+
+    @Operation(
+            summary = "툴 로고 이미지 업로드용 Presigned URL 발급",
+            description = "관리자가 S3에 로고 이미지를 업로드 할 수 있도록 서명된 URL을 발급합니다."
+    )
+    @PostMapping("/admin/tool/logo-upload-url")
+    public ResponseEntity<Response<String>> generateToolLogoUploadUrl(
+            @RequestBody S3UploadAiLogoRequestDTO request
+    ) {
+        String url = s3Service.generatePresignedUrl("tool-logos/" + request.getFileName(), request.getContentType());
+        return ResponseEntity.ok(Response.success(url));
     }
 
     @Operation(

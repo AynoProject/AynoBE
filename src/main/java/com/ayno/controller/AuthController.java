@@ -1,19 +1,12 @@
 package com.ayno.controller;
 
-import com.ayno.config.security.service.CustomUserDetailsService;
-import com.ayno.config.security.service.JwtService;
 import com.ayno.dto.LoginRequestDTO;
 import com.ayno.dto.LoginResponseDTO;
 import com.ayno.dto.common.Response;
-import com.ayno.service.AuthServcie;
+import com.ayno.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
 public class AuthController {
-    private final AuthServcie authServcie;
+    private final AuthService authService;
 
     @Operation(
             summary = "관리자 로그인",
@@ -33,7 +26,7 @@ public class AuthController {
     public ResponseEntity<?> login(
             @RequestBody LoginRequestDTO request)
     {
-        LoginResponseDTO response = authServcie.loginAdmin(request);
+        LoginResponseDTO response = authService.loginAdmin(request);
         return ResponseEntity.ok()
                 .header("Set-Cookie", response.getAccessCookie().toString())
                 .header("Set-Cookie", response.getRefreshCookie().toString())
