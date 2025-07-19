@@ -48,7 +48,7 @@ public class RankController {
             summary = "랭킹 CSV 파일 삭제",
             description = "관리자가 최신 버전 랭킹 CSV 파일을 삭제하고 이전 버전으로 변경"
     )
-    @DeleteMapping("/delete/latest")
+    @DeleteMapping("/rank/delete/latest")
     public ResponseEntity<Response<DeleteCsvResponseDTO>> deleteCsv(
             @AuthenticationPrincipal CustomUserDetails userDetails
     ){

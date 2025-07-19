@@ -11,7 +11,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ShowToolResponseDTO {
+public class ShowToolDetailsResponseDTO {
     private String toolName;
     private String logoUrl;
     private Category category;
@@ -20,4 +20,9 @@ public class ShowToolResponseDTO {
     private PriceType isFree;
     private Long rank;
     private Long score;
+    private Long mauScore;
+    private Long monthMauChangeRateScore;
+    private Long avgStayTimeScore;
+    private Long avgPagesPerVisitScore;
+    private Long boundRateScore;
 }
